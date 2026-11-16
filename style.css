@@ -337,6 +337,47 @@ h2 { font-size: 18px; margin: 0 0 12px; color: var(--testo-2); }
   text-align: center;
 }
 
+/* ---------- Schermata Scarica tratta (punto 3) ---------- */
+
+.stima {
+  margin: 12px 0;
+  padding: 14px;
+  background: #10283a;
+  border: 2px solid var(--accento);
+  border-radius: 12px;
+}
+.stima p { margin: 0 0 12px; }
+.stima .griglia-2 { margin-bottom: 0; }
+
+.mappa {
+  position: relative;
+  height: 60vh;
+  min-height: 320px;
+  overflow: hidden;
+  background: var(--sfondo);
+  border: 1px solid var(--bordo);
+  border-radius: 12px;
+  color: var(--testo-2);
+}
+.mappa-piede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--testo-2);
+  font-variant-numeric: tabular-nums;
+}
+.mappa-piede .scelta { padding: 6px 16px; }
+
+/* Controlli MapLibre più grandi, per il tocco */
+.maplibregl-ctrl-group button { width: 44px; height: 44px; }
+.maplibregl-ctrl-attrib { font-size: 11px; }
+.maplibregl-ctrl-scale { font-size: 12px; }
+
+.tasto-azione:disabled { opacity: 0.4; }
+
 /* Orizzontale */
 @media (orientation: landscape) and (min-width: 640px) {
   .menu { grid-template-columns: repeat(3, 1fr); }
@@ -346,4 +387,5 @@ h2 { font-size: 18px; margin: 0 0 12px; color: var(--testo-2); }
   .barra { padding: 8px 16px; }
   .strumenti { grid-template-columns: repeat(4, 1fr); }
   .strum.largo { grid-column: span 2; }
+  .mappa { height: 75vh; }
 }

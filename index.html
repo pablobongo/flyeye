@@ -11,6 +11,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./lib/maplibre-gl.css">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -119,10 +120,56 @@
     <!-- SCARICA TRATTA -->
     <section id="scarica" class="schermata">
       <h1>Scarica tratta</h1>
-      <div class="scheda vuota">
-        <p>Qui scaricherai le mappe di Catania–Verona e Palermo–Verona.</p>
-        <p class="nota">Disponibile dal punto 4 del piano.</p>
+
+      <!-- Archivio sul telefono -->
+      <div class="scheda">
+        <h2>Archivio sul telefono</h2>
+        <dl class="righe">
+          <div><dt>Archiviazione protetta</dt><dd id="a-persist">–</dd></div>
+          <div><dt>Tile salvate</dt><dd id="a-tile">–</dd></div>
+          <div><dt>Spazio usato dall'app</dt><dd id="a-usato">–</dd></div>
+          <div><dt>Spazio ancora disponibile</dt><dd id="a-libero">–</dd></div>
+        </dl>
+        <button type="button" id="btn-persist" class="tasto-azione secondario spazio-su" hidden>Proteggi i dati dalla pulizia automatica</button>
       </div>
+
+      <!-- Zona di prova -->
+      <div class="scheda">
+        <h2>Zona di prova — Sicilia orientale</h2>
+        <p class="nota">Catania, Etna, Messina. Livelli di zoom 5–13. Le tratte complete arrivano col prossimo aggiornamento.</p>
+        <dl class="righe">
+          <div><dt>Stato</dt><dd id="z-stato">–</dd></div>
+          <div><dt>Tile</dt><dd id="z-tile">–</dd></div>
+          <div><dt>Peso</dt><dd id="z-mb">–</dd></div>
+        </dl>
+        <div class="barra-avanz"><div id="z-barra"></div></div>
+        <p id="z-msg" class="msg-pos"></p>
+
+        <div id="z-stima" class="stima" hidden>
+          <p id="z-stima-testo"></p>
+          <div class="griglia-2">
+            <button type="button" id="btn-z-conferma" class="tasto-azione">Conferma</button>
+            <button type="button" id="btn-z-annulla" class="tasto-azione secondario">Annulla</button>
+          </div>
+        </div>
+
+        <div class="griglia-2">
+          <button type="button" id="btn-z-scarica" class="tasto-azione">Scarica</button>
+          <button type="button" id="btn-z-elimina" class="tasto-azione secondario">Elimina</button>
+        </div>
+        <p class="nota">Fonte: <span id="z-fonte"></span>. Uso personale non commerciale.</p>
+      </div>
+
+      <!-- Mappa di prova -->
+      <div class="scheda">
+        <h2>Mappa (solo dati sul telefono)</h2>
+        <div id="mappa" class="mappa"></div>
+        <div class="mappa-piede">
+          <span id="mappa-zoom">Zoom –</span>
+          <button type="button" id="btn-mappa-centra" class="scelta">Centra sulla zona</button>
+        </div>
+      </div>
+
       <a class="tasto-indietro" href="#home">← Indietro</a>
     </section>
 
@@ -148,6 +195,9 @@
     <span id="avviso"></span>
   </footer>
 
+  <script src="./lib/maplibre-gl.js"></script>
+  <script src="./archivio.js"></script>
+  <script src="./mappa.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

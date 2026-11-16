@@ -1,7 +1,8 @@
-// FlyEye — app.js (punto 2: GPS, strumenti e simulatore)
+// FlyEye — app.js (punti 2 e 3: GPS, strumenti, simulatore, schermata Scarica)
+// Altri file: archivio.js (dati offline), mappa.js (mappa). Vanno caricati prima di questo.
 'use strict';
 
-const VERSIONE = '0.2.0'; // deve coincidere con VERSIONE in sw.js
+const VERSIONE = '0.3.0'; // deve coincidere con VERSIONE in sw.js
 
 const $ = (id) => document.getElementById(id);
 
@@ -423,7 +424,8 @@ const Sim = {
 };
 
 /* =====================================================================
-   SCHERMO SEMPRE ACCESO (Wake Lock) — attivo nella schermata Volo
+   SCHERMO SEMPRE ACCESO (Wake Lock)
+   Attivo nella schermata Volo e durante un download di mappe.
    ===================================================================== */
 const Schermo = {
   lock: null,
@@ -467,6 +469,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Schermo.voluto) Schermo.richiedi();
 });
 
+// Decide se lo schermo deve restare acceso (schermata Volo o download in corso)
+function aggiornaSchermoAcceso() {
+  const nome = location.hash.replace('#', '') || 'home';
+  if (nome === 'volo' || Scaricatore.inCorso) Schermo.attiva(); else Schermo.disattiva();
+}
+
 /* =====================================================================
    IMPOSTAZIONI SALVATE (scelta sorgente, tratta, velocità simulatore)
    ===================================================================== */
@@ -503,6 +511,14 @@ function coordinate(d) {
   const lat = Math.abs(d.lat).toFixed(5) + '° ' + (d.lat >= 0 ? 'N' : 'S');
   const lon = Math.abs(d.lon).toFixed(5) + '° ' + (d.lon >= 0 ? 'E' : 'O');
   return lat + '   ' + lon;
+}
+
+// Byte in testo leggibile: "12,3 MB", "1,4 GB"
+function peso(byte) {
+  if (byte === null || byte === undefined || isNaN(byte)) return 'n.d.';
+  const mb = byte / 1024 / 1024;
+  if (mb >= 1024) return (mb / 1024).toLocaleString('it-IT', { maximumFractionDigits: 1 }) + ' GB';
+  return mb.toLocaleString('it-IT', { maximumFractionDigits: 1 }) + ' MB';
 }
 
 /* =====================================================================
@@ -688,6 +704,155 @@ function preparaSchermataVolo() {
 }
 
 /* =====================================================================
+   SCHERMATA SCARICA TRATTA (punto 3: archivio e zona di prova)
+   ===================================================================== */
+const UIScarica = {
+  confermaElimina: 0,     // ora del primo tocco su Elimina (serve il secondo entro 4 s)
+  ultimoDisegno: 0,
+
+  prepara() {
+    $('z-fonte').textContent = FONTI[ZONA_PROVA.fonte].nome;
+
+    $('btn-z-scarica').addEventListener('click', () => this.premiScarica());
+    $('btn-z-conferma').addEventListener('click', () => {
+      $('z-stima').hidden = true;
+      Scaricatore.avvia(ZONA_PROVA);
+    });
+    $('btn-z-annulla').addEventListener('click', () => { $('z-stima').hidden = true; });
+    $('btn-z-elimina').addEventListener('click', () => this.premiElimina());
+    $('btn-persist').addEventListener('click', async () => {
+      const ok = await Archivio.chiediPersistenza();
+      avviso(ok ? 'Dati protetti dalla pulizia automatica' :
+        'Chrome non ha concesso la protezione: installa l\'app dalla schermata Home e riprova');
+      this.aggiornaArchivio();
+    });
+    $('btn-mappa-centra').addEventListener('click', () => MappaProva.centra());
+
+    Scaricatore.iscriviti(() => this.disegnaDownload(false));
+  },
+
+  mostra() {
+    this.aggiornaArchivio();
+    this.disegnaZona();
+    // La mappa va creata quando la schermata è visibile (serve la dimensione)
+    requestAnimationFrame(() => MappaProva.mostra());
+  },
+
+  async premiScarica() {
+    if (Scaricatore.inCorso) { Scaricatore.pausa(); return; }
+    if (!navigator.onLine) { avviso('Serve la rete: collegati al Wi-Fi'); return; }
+    try {
+      const s = await Scaricatore.stima(ZONA_PROVA);
+      if (s.mancanti === 0) {
+        avviso('Zona già completa: nulla da scaricare');
+        return;
+      }
+      $('z-stima-testo').innerHTML =
+        'Da scaricare: <b>' + num(s.mancanti) + '</b> tile su ' + num(s.totale) +
+        ', circa <b>' + s.mbStimati.toLocaleString('it-IT', { maximumFractionDigits: 0 }) +
+        ' MB</b>. Usa il Wi-Fi. Procedo?';
+      $('z-stima').hidden = false;
+    } catch (e) {
+      avviso('Errore archivio: ' + e.message, 0);
+    }
+  },
+
+  async premiElimina() {
+    if (Scaricatore.inCorso) { avviso('Metti prima in pausa il download'); return; }
+    const ora = Date.now();
+    if (ora - this.confermaElimina > 4000) {
+      this.confermaElimina = ora;
+      $('btn-z-elimina').textContent = 'Tocca ancora per eliminare';
+      setTimeout(() => {
+        if (Date.now() - this.confermaElimina >= 4000) $('btn-z-elimina').textContent = 'Elimina';
+      }, 4100);
+      return;
+    }
+    this.confermaElimina = 0;
+    $('btn-z-elimina').textContent = 'Elimina';
+    try {
+      await Archivio.eliminaZona(ZONA_PROVA.id);
+      avviso('Zona di prova eliminata');
+    } catch (e) {
+      avviso('Errore durante l\'eliminazione: ' + e.message, 0);
+    }
+    Scaricatore.st = null;
+    this.aggiornaArchivio();
+    this.disegnaZona();
+    MappaProva.ricarica();
+  },
+
+  async aggiornaArchivio() {
+    const p = await Archivio.persistente();
+    const ep = $('a-persist');
+    if (p === null) { ep.textContent = 'Non supportata'; ep.className = 'no'; }
+    else { ep.textContent = p ? 'Sì' : 'No'; ep.className = p ? 'si' : 'no'; }
+    $('btn-persist').hidden = p !== false;
+
+    try { $('a-tile').textContent = num(await Archivio.contaTile()); }
+    catch (e) { $('a-tile').textContent = 'errore'; }
+
+    const s = await Archivio.spazio();
+    $('a-usato').textContent = s ? peso(s.usage) : 'n.d.';
+    $('a-libero').textContent = s ? peso(Math.max(0, s.quota - s.usage)) : 'n.d.';
+  },
+
+  // Stato salvato della zona (quando non c'è un download in corso)
+  async disegnaZona() {
+    if (Scaricatore.inCorso) { this.disegnaDownload(true); return; }
+    let z = null;
+    try { z = await Archivio.leggiZona(ZONA_PROVA.id); } catch (e) { /* archivio non leggibile */ }
+    const totale = elencoTile(ZONA_PROVA).length;
+    const salvate = z ? z.salvate : 0;
+    $('z-stato').textContent = !z ? 'Assente' : (z.stato === 'completa' ? 'Completa' : 'Parziale');
+    $('z-stato').className = z && z.stato === 'completa' ? 'si' : 'no';
+    $('z-tile').textContent = num(salvate) + ' / ' + num(totale);
+    $('z-mb').textContent = z ? peso(z.byte) : '–';
+    $('z-barra').style.width = (100 * salvate / totale).toFixed(1) + '%';
+    const msg = Scaricatore.errore || '';
+    $('z-msg').textContent = msg;
+    $('btn-z-scarica').textContent = !z ? 'Scarica' : (z.stato === 'completa' ? 'Controlla / completa' : 'Riprendi');
+    $('btn-z-scarica').classList.remove('ferma');
+  },
+
+  // Avanzamento durante il download (ridisegno al massimo 4 volte al secondo)
+  disegnaDownload(forza) {
+    if (!$('scarica').classList.contains('attiva')) {
+      if (!Scaricatore.inCorso) aggiornaSchermoAcceso();
+      return;
+    }
+    if (!Scaricatore.inCorso) {
+      aggiornaSchermoAcceso();
+      this.aggiornaArchivio();
+      this.disegnaZona();
+      MappaProva.ricarica();
+      if (!Scaricatore.errore && Scaricatore.st) {
+        const f = Scaricatore.st.falliti.length;
+        avviso(Scaricatore.fermato ? 'Download in pausa' :
+          (f ? 'Download finito con ' + f + ' tile non scaricate: premi Riprendi' : 'Zona di prova completa'));
+      }
+      return;
+    }
+    const ora = Date.now();
+    if (!forza && ora - this.ultimoDisegno < 250) return;
+    this.ultimoDisegno = ora;
+    aggiornaSchermoAcceso();
+
+    const st = Scaricatore.st;
+    $('z-stato').textContent = Scaricatore.fermato ? 'Metto in pausa…' :
+      (st.giro > 1 ? 'Ripeto le fallite (' + st.giro + '° giro)…' : 'Scarico…');
+    $('z-stato').className = '';
+    $('z-tile').textContent = num(st.salvate) + ' / ' + num(st.totale) +
+      (st.falliti.length ? '  (' + st.falliti.length + ' fallite)' : '');
+    $('z-mb').textContent = peso(st.byte);
+    $('z-barra').style.width = (100 * st.salvate / st.totale).toFixed(1) + '%';
+    $('z-msg').textContent = Scaricatore.errore || '';
+    $('btn-z-scarica').textContent = 'Pausa';
+    $('btn-z-scarica').classList.add('ferma');
+  }
+};
+
+/* =====================================================================
    NAVIGAZIONE TRA SCHERMATE (con tasto Indietro di Android)
    ===================================================================== */
 const SCHERMATE = ['home', 'volo', 'scarica', 'impostazioni'];
@@ -697,7 +862,8 @@ function mostraSchermata() {
   const scelta = SCHERMATE.includes(nome) ? nome : 'home';
   SCHERMATE.forEach((s) => $(s).classList.toggle('attiva', s === scelta));
   if (scelta === 'impostazioni') aggiornaStato();
-  if (scelta === 'volo') Schermo.attiva(); else Schermo.disattiva();
+  if (scelta === 'scarica') UIScarica.mostra();
+  aggiornaSchermoAcceso();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', mostraSchermata);
@@ -751,14 +917,8 @@ async function aggiornaStato() {
     } catch (e) { ep.textContent = 'n.d.'; ep.className = ''; }
   } else { ep.textContent = 'n.d.'; ep.className = ''; }
 
-  if (navigator.storage && navigator.storage.estimate) {
-    try {
-      const { usage } = await navigator.storage.estimate();
-      $('i-spazio').textContent = (usage / 1024 / 1024).toFixed(1) + ' MB';
-    } catch (e) { $('i-spazio').textContent = 'n.d.'; }
-  } else {
-    $('i-spazio').textContent = 'n.d.';
-  }
+  const s = await Archivio.spazio();
+  $('i-spazio').textContent = s ? peso(s.usage) : 'n.d.';
 }
 
 /* =====================================================================
@@ -790,10 +950,10 @@ if ('serviceWorker' in navigator) {
     }
   });
 
-  // Nuova versione installata: ricarica una volta per usarla
+  // Nuova versione installata: ricarica una volta per usarla (mai durante un download)
   let ricaricata = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!avevaController || ricaricata) return;
+    if (!avevaController || ricaricata || Scaricatore.inCorso) return;
     ricaricata = true;
     location.reload();
   });
@@ -806,4 +966,5 @@ if ('serviceWorker' in navigator) {
    ===================================================================== */
 aggiornaRete();
 preparaSchermataVolo();
+UIScarica.prepara();
 mostraSchermata();
