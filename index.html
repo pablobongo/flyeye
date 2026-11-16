@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="FlyEye: cosa c'è sotto l'aereo, anche offline.">
+  <title>FlyEye</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="barra">
+    <a class="marchio" href="#home" aria-label="Torna alla schermata iniziale">
+      <img src="./icons/icon-192.png" alt="" width="36" height="36">
+      <span>FlyEye</span>
+    </a>
+    <span id="stato-rete" class="chip">…</span>
+  </header>
+
+  <main>
+    <!-- SCHERMATA INIZIALE -->
+    <section id="home" class="schermata attiva">
+      <nav class="menu">
+        <a class="tasto" href="#volo">
+          <span class="tasto-icona" aria-hidden="true">✈&#xFE0E;</span>
+          <span class="tasto-testo">
+            <strong>Volo</strong>
+            <small>Vista dall'aereo in tempo reale</small>
+          </span>
+        </a>
+        <a class="tasto" href="#scarica">
+          <span class="tasto-icona" aria-hidden="true">⬇&#xFE0E;</span>
+          <span class="tasto-testo">
+            <strong>Scarica tratta</strong>
+            <small>Da fare a casa, in Wi-Fi</small>
+          </span>
+        </a>
+        <a class="tasto" href="#impostazioni">
+          <span class="tasto-icona" aria-hidden="true">⚙&#xFE0E;</span>
+          <span class="tasto-testo">
+            <strong>Impostazioni</strong>
+            <small>Stato dell'app e preferenze</small>
+          </span>
+        </a>
+      </nav>
+    </section>
+
+    <!-- VOLO -->
+    <section id="volo" class="schermata">
+      <h1>Volo</h1>
+      <div class="scheda vuota">
+        <p>Qui arriveranno GPS, strumenti e mappa.</p>
+        <p class="nota">Disponibile dal punto 2 del piano.</p>
+      </div>
+      <a class="tasto-indietro" href="#home">← Indietro</a>
+    </section>
+
+    <!-- SCARICA TRATTA -->
+    <section id="scarica" class="schermata">
+      <h1>Scarica tratta</h1>
+      <div class="scheda vuota">
+        <p>Qui scaricherai le mappe di Catania–Verona e Palermo–Verona.</p>
+        <p class="nota">Disponibile dal punto 4 del piano.</p>
+      </div>
+      <a class="tasto-indietro" href="#home">← Indietro</a>
+    </section>
+
+    <!-- IMPOSTAZIONI -->
+    <section id="impostazioni" class="schermata">
+      <h1>Impostazioni</h1>
+      <div class="scheda">
+        <h2>Stato dell'app</h2>
+        <dl class="righe">
+          <div><dt>Versione</dt><dd id="i-versione">–</dd></div>
+          <div><dt>Pronta senza rete</dt><dd id="i-offline">–</dd></div>
+          <div><dt>Installata</dt><dd id="i-installata">–</dd></div>
+          <div><dt>Rete</dt><dd id="i-rete">–</dd></div>
+          <div><dt>Spazio usato</dt><dd id="i-spazio">–</dd></div>
+        </dl>
+      </div>
+      <a class="tasto-indietro" href="#home">← Indietro</a>
+    </section>
+  </main>
+
+  <footer class="piede">
+    <span id="avviso"></span>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
