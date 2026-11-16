@@ -52,11 +52,67 @@
 
     <!-- VOLO -->
     <section id="volo" class="schermata">
-      <h1>Volo</h1>
-      <div class="scheda vuota">
-        <p>Qui arriveranno GPS, strumenti e mappa.</p>
-        <p class="nota">Disponibile dal punto 2 del piano.</p>
+      <div class="volo-testa">
+        <div class="segmenti" role="group" aria-label="Fonte della posizione">
+          <button type="button" id="btn-src-gps" class="seg">GPS</button>
+          <button type="button" id="btn-src-sim" class="seg">Simulatore</button>
+        </div>
+        <div id="stato-pos" class="stato-pos spento">SPENTO</div>
       </div>
+      <p id="msg-pos" class="msg-pos"></p>
+
+      <div id="strumenti" class="strumenti">
+        <div class="strum">
+          <span class="etic">Velocità <span id="o-vel" class="orig"></span></span>
+          <span class="val"><b id="s-vel">—</b><small>km/h</small></span>
+        </div>
+        <div class="strum">
+          <span class="etic">Quota <span id="o-quota" class="orig"></span></span>
+          <span class="val"><b id="s-quota">—</b><small>m</small></span>
+        </div>
+        <div class="strum">
+          <span class="etic">Direzione <span id="o-dir" class="orig"></span></span>
+          <span class="val"><b id="s-dir">—</b><small id="s-dir-card"></small></span>
+        </div>
+        <div class="strum">
+          <span class="etic">Precisione <span id="o-prec" class="orig"></span></span>
+          <span class="val"><b id="s-prec">—</b><small>m</small></span>
+        </div>
+        <div class="strum largo">
+          <span class="etic">Coordinate <span id="o-coord" class="orig"></span></span>
+          <span class="val coord" id="s-coord">—</span>
+        </div>
+        <div class="strum largo">
+          <span class="etic">Ultimo dato</span>
+          <span class="val"><b id="s-eta" class="piccolo">—</b></span>
+        </div>
+      </div>
+
+      <!-- Comandi GPS -->
+      <div id="pannello-gps" class="scheda">
+        <button type="button" id="btn-gps" class="tasto-azione">Avvia GPS</button>
+        <p class="nota spazio-su">Tieni il telefono vicino al finestrino. Senza rete il primo aggancio può richiedere alcuni minuti.</p>
+      </div>
+
+      <!-- Comandi simulatore -->
+      <div id="pannello-sim" class="scheda" hidden>
+        <h2>Tratta simulata</h2>
+        <div id="sim-tratte" class="griglia-2"></div>
+        <h2>Velocità di riproduzione</h2>
+        <div id="sim-vel" class="griglia-4"></div>
+        <div class="griglia-2">
+          <button type="button" id="btn-sim-play" class="tasto-azione">Avvia</button>
+          <button type="button" id="btn-sim-reset" class="tasto-azione secondario">Ricomincia</button>
+        </div>
+        <div class="barra-avanz"><div id="sim-barra"></div></div>
+        <dl class="righe">
+          <div><dt>Fase</dt><dd id="sim-fase">–</dd></div>
+          <div><dt>Percorsi</dt><dd id="sim-dist">–</dd></div>
+          <div><dt>Tempo di volo simulato</dt><dd id="sim-tempo">–</dd></div>
+        </dl>
+      </div>
+
+      <p id="wake" class="schermo-acceso">Schermo sempre acceso: –</p>
       <a class="tasto-indietro" href="#home">← Indietro</a>
     </section>
 
@@ -80,6 +136,7 @@
           <div><dt>Pronta senza rete</dt><dd id="i-offline">–</dd></div>
           <div><dt>Installata</dt><dd id="i-installata">–</dd></div>
           <div><dt>Rete</dt><dd id="i-rete">–</dd></div>
+          <div><dt>Permesso posizione</dt><dd id="i-gps">–</dd></div>
           <div><dt>Spazio usato</dt><dd id="i-spazio">–</dd></div>
         </dl>
       </div>

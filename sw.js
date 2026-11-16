@@ -1,7 +1,7 @@
-// FlyEye — service worker (punto 1)
+// FlyEye — service worker (punto 2)
 // A ogni nuova versione dell'app cambiare VERSIONE: è così che il telefono
 // capisce che deve scaricare i file nuovi.
-const VERSIONE = '0.1.0';
+const VERSIONE = '0.2.0';
 const CACHE_APP = 'flyeye-app-' + VERSIONE;
 
 // Tutti i file dell'app. Ogni file nuovo va aggiunto qui.
